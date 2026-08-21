@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>写真アップロード</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      width: 90%;
+      max-width: 420px;
+      background: white;
+      padding: 32px 24px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 24px;
+    }
+
+    #preview {
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 12px;
+      margin: 20px 0;
+      display: none;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      margin: 20px 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #222;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+    }
+
+    #message {
+      margin-top: 16px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>写真を送信</h1>
+
+    <p>写真ライブラリから画像を選んでください</p>
+
+    <input
+      id="fileInput"
+      type="file"
+      accept="image/*"
+    >
+
+    <img id="preview">
+
+    <button id="sendButton" disabled>
+      写真を送信
+    </button>
+
+    <p id="message"></p>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const sendButton = document.getElementById("sendButton");
+    const message = document.getElementById("message");
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+
+      if (!file) {
+        return;
+      }
+
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+
+      sendButton.disabled = false;
+      message.textContent = "";
+    });
+
+    sendButton.addEventListener("click", async () => {
+      const file = fileInput.files[0];
+
+      if (!file) {
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      sendButton.disabled = true;
+      sendButton.textContent = "送信中...";
+
+      try {
+        const response = await fetch("/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error("送信に失敗しました");
+        }
+
+        message.textContent = "送信しました！";
+
+        // 次の写真を送れる状態に戻す
+        fileInput.value = "";
+        preview.src = "";
+        preview.style.display = "none";
+
+      } catch (error) {
+        message.textContent = "送信に失敗しました";
+      }
+
+      sendButton.textContent = "写真を送信";
+    });
+  </script>
+</body>
+</html>
